@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+<div class="text-center">
+  <h1>Welcome!</h1>
+</div>
+
+<br>
+
+<form action="/" method="POST">
+  <div class="form-group">
+    <input name="fio" class="form-control input-lg" type="text" placeholder="Enter a fio" required>
+  </div>
+  <input type="submit" class="btn btn-primary btn-lg btn-block" value="Submit">
+</form>
+
+<br>
+<hr>
+<table border="1">
+   <caption>Таблица</caption>
+   <tr>
+    <th>UUID</th>
+    <th>ФИО</th>
+    <th>Баланс</th>
+    <th>ХОЛД</th>
+    <th>Статус</th>
+    <th>Добавлен</th>
+    <th>Обновили</th>
+   </tr>
+  {% for hold in holds %}
+      <tr>
+        <td>{{hold.uuid}}</td>
+        <td>{{hold.fio}}</td>
+        <td>{{hold.balance}}</td>
+        <td>{{hold.hold}}</td>
+        <td>{{hold.status}}</td>
+        <td><em>{{hold.created.strftime('%Y-%m-%d')}}</em></td>
+        <td><em>{{hold.last_update.strftime('%Y-%m-%d')}}</em></td>
+      </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
