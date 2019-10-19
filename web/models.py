@@ -1,15 +1,15 @@
-# models.py
-
-
 import datetime
 from app import db
 import sqlalchemy
+
 
 class Hold(db.Model):
     __tablename__ = 'holds'
 
     id = db.Column(db.Integer, primary_key=True)
-    uuid = db.Column(db.String, unique=True, nullable=False, server_default=sqlalchemy.text("overlay(overlay(md5(random()::text || ':' || clock_timestamp()::text) placing '4' from 13) placing to_hex(floor(random()*(11-8+1) + 8)::int)::text from 17)::cstring"))
+    uuid = db.Column(db.String, unique=True, nullable=False, server_default=sqlalchemy.text(
+        "overlay(overlay(md5(random()::text || ':' || clock_timestamp()::text) placing '4' from 13) "
+        "placing to_hex(floor(random()*(11-8+1) + 8)::int)::text from 17)::cstring"))
     fio = db.Column(db.String, nullable=False)
     balance = db.Column(db.Integer, nullable=False)
     hold = db.Column(db.Integer, nullable=False)

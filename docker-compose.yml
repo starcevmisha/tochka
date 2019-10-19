@@ -15,6 +15,28 @@ services:
       - .env
     command: /usr/local/bin/gunicorn -w 2 -b :8000 app:app
 
+  worker:
+    restart: always
+    build: ./worker
+    links:
+      - postgres:postgres
+      - redis:redis
+    env_file:
+      - .env
+
+  monitor:
+    restart: always
+    build: ./worker
+    ports:
+     - "5555:5555"
+    entrypoint: flower
+    command:  -A tasks --port=5555 --broker=redis://redis:6379/0
+    depends_on:
+      - worker
+      - redis
+    env_file:
+      - .env
+
   nginx:
     restart: always
     build: ./nginx
@@ -39,6 +61,12 @@ services:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:latest
+    hostname: redis
+    ports:
+        - '6379:6379'
 
 volumes:
   db-data:

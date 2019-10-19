@@ -1,10 +1,10 @@
-# app.py
-from flask import abort
 from flask import jsonify
 from flask import Flask
 from flask import request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from config import BaseConfig
+from worker import celery
+import datetime
 
 app = Flask(__name__)
 app.config.from_object(BaseConfig)
@@ -39,22 +39,26 @@ def substract():
     amount = request.args.get('amount')
 
     if (not uuid) or (not amount):
-        return jsonify(Result(status=404, result=False, description="no args").serialize())
+        return bad("no args")
+
     amount = int(amount)
     if amount < 0:
-        return jsonify(Result(status=404, result=False, description="amount should be positive number").serialize())
+        return bad("amount should be positive number")
 
     user = Hold.query.filter_by(uuid=uuid).first()
     if user is None:
-        return jsonify(Result(status=404, result=False, description="BAD UUID").serialize())
+        return bad("BAD UUID")
 
     if user.hold + amount > user.balance:
-        return jsonify(
-            Result(status=404, result=False, addition=user, description="Недостаточно денег на счёте").serialize())
+        return bad("not enough money in the account")
 
     user.hold += amount
+    user.last_update = datetime.datetime.now()
     db.session.commit()
-    return jsonify(Result(status=200, result=True, addition=user, description="OK").serialize())
+
+    celery.send_task('tasks.substract', args=[uuid], countdown=BaseConfig.SUBSTRACT_TASK_DELAY)
+
+    return ok(user, "OK")
 
 
 @app.route("/api/status", methods=['GET', 'POST'])
@@ -62,13 +66,13 @@ def status():
     uuid = request.args.get('uuid')
 
     if not uuid:
-        return jsonify(Result(status=404, result=False, description="no args").serialize())
+        return bad("no args")
 
     user = Hold.query.filter_by(uuid=uuid).first()
     if user is None:
-        return jsonify(Result(status=404, result=False, description="BAD UUID").serialize())
+        return bad("incorrect UUID")
 
-    return jsonify(Result(status=200, result=True, addition=user, description="OK").serialize())
+    return ok(user, "OK")
 
 
 @app.route("/api/add", methods=['POST'])
@@ -76,22 +80,34 @@ def add():
     uuid = request.args.get('uuid')
     amount = request.args.get('amount')
     if (not uuid) or (not amount):
-        return jsonify(Result(status=404, result=False, description="no args").serialize())
+        return bad("no args")
+
     amount = int(amount)
     if amount < 0:
-        return jsonify(Result(status=404, result=False, description="amount < 0").serialize())
+        return bad("amount should be positive")
 
     user = Hold.query.filter_by(uuid=uuid).first()
     if user is None:
-        return jsonify(Result(status=404, result=False, description="BAD UUID").serialize())
+        return bad("incorrect UUID")
+    if not user.status:
+        return bad("account closed")
 
     user.balance += amount
+    user.last_update = datetime.datetime.now()
     db.session.commit()
-    return jsonify(Result(status=200, result=True, addition=user, description="OK").serialize())
+    return ok(user, "OK")
+
+
+def bad(description, addition=None):
+    jsonify(Result(status=404, result=False, addition=addition, description=description))
+
+
+def ok(description, addition=None):
+    jsonify(Result(status=200, result=True, addition=addition, description=description).serialize())
 
 
 class Result:
-    def __init__(self, status=None, result=None, addition=None, description=None):
+    def __init__(self, status=404, result=False, addition=None, description=None):
         self.description = description
         self.addition = addition
         self.result = result
@@ -111,7 +127,6 @@ class Result:
             } if self.addition is not None else {},
             'status': self.status
         }
-
 
 
 if __name__ == '__main__':

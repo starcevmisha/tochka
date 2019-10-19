@@ -38,7 +38,7 @@
                 <th>UUID</th>
                 <th>ФИО</th>
                 <th>Баланс</th>
-                <th>ХОЛД</th>
+                <th>холд</th>
                 <th>Статус</th>
                 <th class="">Добавлен</th>
                 <th>Обновлён</th>
@@ -51,8 +51,8 @@
                     <td class="align-center">{{ hold.balance }}</td>
                     <td class="align-center">{{ hold.hold }}</td>
                     <td class="align-center {{ 'bg-success' if hold.status else 'bg-danger' }}">{{ hold.status }}</td>
-                    <td class="align-center"><em>{{ hold.created.strftime('%Y-%m-%d') }}</em></td>
-                    <td class="align-center"><em>{{ hold.last_update.strftime('%Y-%m-%d') }}</em></td>
+                    <td class="align-center"><em>{{ hold.created.strftime('%Y-%m-%d %H:%M') }}</em></td>
+                    <td class="align-center"><em>{{ hold.last_update.strftime('%Y-%m-%d %H:%M') }}</em></td>
                 </tr>
             {% endfor %}
         </table>
