@@ -7,11 +7,11 @@ celery = Celery('tasks', broker=BaseConfig.CELERY_BROKER_URL, backend=BaseConfig
 
 
 @celery.task(name='tasks.substract')
-def substract(uuid : str):
+def substract(uuid : str, amount: int):
     user = Session.query(Hold).filter_by(uuid=uuid).first()
     if user == None:
         return
-    user.balance -= user.hold
-    user.hold = 0
+    user.balance -= amount
+    user.hold -= amount
     user.last_update = datetime.datetime.now()
     Session.commit()

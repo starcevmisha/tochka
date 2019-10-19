@@ -6,9 +6,17 @@ from config import BaseConfig
 from worker import celery
 import datetime
 
+import logging
+from logging.handlers import RotatingFileHandler
+
 app = Flask(__name__)
 app.config.from_object(BaseConfig)
 db = SQLAlchemy(app)
+
+handler = RotatingFileHandler('log.log', maxBytes=10000, backupCount=1)
+handler.setLevel(logging.INFO)
+app.logger.addHandler(handler)
+
 
 from models import *
 
@@ -55,10 +63,11 @@ def substract():
     user.hold += amount
     user.last_update = datetime.datetime.now()
     db.session.commit()
+    app.logger.info(f'account #{uuid}: hold+={amount}')
 
-    celery.send_task('tasks.substract', args=[uuid], countdown=BaseConfig.SUBSTRACT_TASK_DELAY)
+    celery.send_task('tasks.substract', args=[uuid, amount], countdown=BaseConfig.SUBSTRACT_TASK_DELAY)
 
-    return ok(user, "OK")
+    return ok(user)
 
 
 @app.route("/api/status", methods=['GET', 'POST'])
@@ -72,7 +81,7 @@ def status():
     if user is None:
         return bad("incorrect UUID")
 
-    return ok(user, "OK")
+    return ok(user)
 
 
 @app.route("/api/add", methods=['GET', 'POST'])
@@ -95,15 +104,17 @@ def add():
     user.balance += amount
     user.last_update = datetime.datetime.now()
     db.session.commit()
-    return ok(user, "OK")
+    app.logger.info(f'account #{uuid}: +{amount}')
+
+    return ok(user)
 
 
 def bad(description, addition=None):
-    jsonify(Result(status=404, result=False, addition=addition, description=description))
+    return jsonify(Result(status=404, result=False, addition=addition, description=description))
 
 
-def ok(description, addition=None):
-    jsonify(Result(status=200, result=True, addition=addition, description=description).serialize())
+def ok(addition):
+    return jsonify(Result(status=200, result=True, addition=addition, description="OK").serialize())
 
 
 class Result:
