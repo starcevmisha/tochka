@@ -56,8 +56,10 @@ def substract():
     user = Hold.query.filter_by(uuid=uuid).first()
     if user is None:
         return bad("BAD UUID")
+    if not user.status:
+        return bad("account closed")
 
-    if user.hold + amount > user.balance:
+    if user.hold + amount >= user.balance:
         return bad("not enough money in the account")
 
     user.hold += amount
