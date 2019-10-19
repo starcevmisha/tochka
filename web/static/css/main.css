@@ -1,5 +1,25 @@
 /* custom styles */
 
 .container {
-  max-width: 500px;
+  /*max-width: 500px;*/
+}
+
+.table thead th, .align-center {
+   text-align: center;
+}
+
+.data-table-header {
+  background: #bbb;
+}
+
+.data-table td {
+  padding: 10px;
+}
+
+.status_active {
+  background: #cbffa5;
+}
+
+.status_closed {
+  background: #c68664;
 }

@@ -17,7 +17,10 @@ from models import *
 def index():
     if request.method == 'POST':
         fio = request.form['fio']
-        hold = Hold(fio)
+        balance = request.form['balance']
+        balance = balance if balance else 0
+        isActive = 'isActive' in request.form
+        hold = Hold(fio, isActive, balance)
         db.session.add(hold)
         db.session.commit()
 
@@ -39,7 +42,7 @@ def substract():
         return jsonify(Result(status=404, result=False, description="no args").serialize())
     amount = int(amount)
     if amount < 0:
-        return jsonify(Result(status=404, result=False, description="amount < 0").serialize())
+        return jsonify(Result(status=404, result=False, description="amount should be positive number").serialize())
 
     user = Hold.query.filter_by(uuid=uuid).first()
     if user is None:
@@ -108,6 +111,7 @@ class Result:
             } if self.addition is not None else {},
             'status': self.status
         }
+
 
 
 if __name__ == '__main__':

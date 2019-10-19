@@ -17,10 +17,10 @@ class Hold(db.Model):
     last_update = db.Column(db.DateTime, nullable=False)
     created = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, fio):
+    def __init__(self, fio, status=True, balance=0):
         self.fio = fio
         self.last_update = datetime.datetime.now()
         self.created = self.last_update
-        self.balance = 0
+        self.balance = balance
         self.hold = 0
-        self.status = True
+        self.status = status
