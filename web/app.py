@@ -60,7 +60,7 @@ def substract():
         return bad("account closed")
 
     if user.hold + amount >= user.balance:
-        return bad("not enough money in the account")
+        return bad("not enough money in the account", addition=user)
 
     user.hold += amount
     user.last_update = datetime.datetime.now()
@@ -112,7 +112,7 @@ def add():
 
 
 def bad(description, addition=None):
-    return jsonify(Result(status=404, result=False, addition=addition, description=description))
+    return jsonify(Result(status=404, result=False, addition=addition, description=description).serialize())
 
 
 def ok(addition):
