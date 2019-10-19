@@ -75,7 +75,7 @@ def status():
     return ok(user, "OK")
 
 
-@app.route("/api/add", methods=['POST'])
+@app.route("/api/add", methods=['GET', 'POST'])
 def add():
     uuid = request.args.get('uuid')
     amount = request.args.get('amount')
